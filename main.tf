@@ -44,10 +44,9 @@ resource "aws_iam_instance_profile" "ec2_ecr_profile" {
   role = aws_iam_role.ec2_ecr_read_only.name
 }
 
-
-
 resource "aws_security_group" "web_ec2_sg" {
   name = "${var.cluster_name}-instances-sg"
+
   ingress {
     from_port   = var.server_port
     to_port     = var.server_port
@@ -77,6 +76,8 @@ resource "aws_launch_configuration" "ec2" {
 }
 
 resource "aws_autoscaling_group" "web_app_ag" {
+  name = "${var.cluster_name} - ${aws_launch_configuration.ec2.name}"
+
   launch_configuration = aws_launch_configuration.ec2.name
   vpc_zone_identifier = data.aws_subnets.default.ids
   target_group_arns = [aws_lb_target_group.web_app_asg.id] # Load banancer target group
@@ -85,10 +86,25 @@ resource "aws_autoscaling_group" "web_app_ag" {
   min_size = var.min_size
   max_size = var.max_size
 
+  # Zero downtime strat
+  min_elb_capacity = var.min_size
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tag {
     key = "Name"
     value = "${var.cluster_name}-instance"
     propagate_at_launch = true
+  }
+
+  dynamic "tag" {
+    for_each = var.custom_tags
+    content {
+      key = tag.key
+      value = tag.value
+      propagate_at_launch = true
+    }
   }
 }
 

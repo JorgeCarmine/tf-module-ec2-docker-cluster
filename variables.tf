@@ -9,16 +9,6 @@ variable "cluster_name" {
   type = string
 }
 
-variable "db_remote_state_bucket" {
-  description = "Name for the S3 bucket for the database's remote state"
-  type  = string
-}
-
-variable "db_remote_state_key" {
-  description = "Path for the database's remote state"
-  type  = string
-}
-
 variable "instance_type" {
   description = "EC2 instance type for cluster"
   type = string
@@ -45,4 +35,10 @@ variable "user_data_variables" {
     region = string
   })
   description = "Variables for sh script"
+}
+
+variable "custom_tags" {
+  description = "Custom tags to set on the Instances in the ASG"
+  type = map(string)
+  default = {}
 }
